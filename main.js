@@ -2,6 +2,7 @@
 const path = require("path");
 const express = require("express");
 const fs = require("fs");
+const hbs = require("express-handlebars");
 // const resources = ['iamges, 'public'];
 
 // Step 2. Create an Instance of Express Application
@@ -13,6 +14,10 @@ const app = express();
     next();
 });
 */ 
+
+// Config. express to use handlebafrs as the rendering engine
+app.engine('hbs', hbs());
+app.set('view engine','hbs');
 
 // Step 3. Define Route (middleware)
 app.use(express.static(path.join(__dirname + "/public")));
@@ -58,14 +63,32 @@ app.get("/random-image", (req, resp)=>{
     resp.type('text/html');
     resp.type('gif');
     resp.type('png');
-    resp.sendfile(path.join(__dirname, 'images', randomImg));
+    resp.sendFile(path.join(__dirname, 'images', randomImg));   
 });
 
+app.get("/time", (req, resp) => {
+    resp.status(200);
+    resp.format({
+        'text/html':() => {
+            resp.render ('time', { time: 
+                (new Date(). toString()), layout: false
+            })
+        },
+        'application/json': () => {
+            resp.json({time: new Date()
+            });
+        },  
+        'default':() => {
+            resp.status(406);
+            resp.send("Not Acceptable");
+        }
+    });  
+});
 
 // Catch All 
 app.use((req, resp) => {
     resp.status(404);
-    resp.sendFile(path.join(__dirname, '/error/404_error.png'));
+    resp.sendFile(path.join(__dirname, 'public', 'error.html'));
 });
 
 const PORT = parseInt(process.argv[2]) || parseInt(process.env.APP_PORT) || 3000
